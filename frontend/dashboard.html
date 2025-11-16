@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BusTrack Pro - Professional Dashboard</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f6fa;
+      color: #333;
+    }
+
+    .dashboard-container {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      flex-direction: column;
+    }
+
+    .dashboard-inner {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Sidebar Styling */
+    .sidebar {
+      width: 280px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      overflow-y: auto;
+    }
+
+    .sidebar-header {
+      padding: 2rem 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .logo i {
+      font-size: 2rem;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+    }
+
+    .sidebar-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 1.5rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.5rem;
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      border-left: 4px solid transparent;
+      position: relative;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .nav-item.active {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border-left-color: #ffd700;
+    }
+
+    .nav-item i {
+      font-size: 1.2rem;
+      width: 1.5rem;
+    }
+
+    .sidebar-footer {
+      padding: 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .logout-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+    }
+
+    .logout-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .top-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 2rem;
+      background: white;
+      border-bottom: 1px solid #e0e0e0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .header-left h1 {
+      font-size: 1.8rem;
+      color: #333;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      background: #f5f6fa;
+      padding: 0.8rem 1.2rem;
+      border-radius: 8px;
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .search-box input {
+      background: none;
+      border: none;
+      outline: none;
+      width: 100%;
+      font-size: 0.95rem;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      font-size: 1.3rem;
+      color: #667eea;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .icon-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #f5576c;
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      cursor: pointer;
+    }
+
+    .user-menu img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .content-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 2rem;
+    }
+
+    .section {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Stats Cards */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      color: white;
+    }
+
+    .bus-icon { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .driver-icon { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .route-icon { background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); }
+    .alert-icon { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); }
+
+    .stat-content h3 {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .stat-content small {
+      color: #999;
+      font-size: 0.85rem;
+    }
+
+    /* Charts */
+    .charts-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .chart-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .chart-card h3 {
+      margin-bottom: 1rem;
+      color: #333;
+      font-size: 1rem;
+    }
+
+    /* Activity */
+    .activity-section {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: #f5f6fa;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+    }
+
+    .activity-badge {
+      display: inline-block;
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .activity-badge.active {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .activity-badge.alert {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .activity-text {
+      flex: 1;
+      color: #555;
+    }
+
+    .activity-time {
+      color: #999;
+      font-size: 0.85rem;
+    }
+
+    /* Table */
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .table-header h2 {
+      font-size: 1.5rem;
+      color: #333;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 0.8rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .table-responsive {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th {
+      background: #f5f6fa;
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: #666;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .data-table td {
+      padding: 1rem;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .data-table tr:hover {
+      background: #f9f9f9;
+    }
+
+    .buses-grid, .drivers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-container {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        height: auto;
+        display: none;
+      }
+
+      .sidebar.open {
+        display: flex;
+      }
+
+      .sidebar-toggle {
+        display: block;
+      }
+
+      .header-right {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .search-box {
+        min-width: 100%;
+      }
+
+      .stats-row {
+        grid-template-columns: 1fr;
+      }
+
+      .charts-row {
+        grid-template-columns: 1fr;
+      }
+
+      .buses-grid, .drivers-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Top Navigation Bar -->
+    <nav style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); padding: 1rem 2rem; display: flex; gap: 2rem; align-items: center; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);">
+      <a href="index.html" style="color: white; text-decoration: none; font-weight: 600; font-size: 1rem; transition: all 0.3s ease; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="fas fa-user"></i> Passenger
+      </a>
+      <a href="driver.html" style="color: white; text-decoration: none; font-weight: 600; font-size: 1rem; transition: all 0.3s ease; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="fas fa-user-tie"></i> Driver
+      </a>
+      <a href="admin.html" style="color: white; text-decoration: none; font-weight: 600; font-size: 1rem; transition: all 0.3s ease; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="fas fa-cog"></i> Admin
+      </a>
+      <a href="dashboard.html" style="color: white; text-decoration: none; font-weight: 600; font-size: 1rem; transition: all 0.3s ease; display: flex; align-items: center; gap: 0.5rem; border-bottom: 3px solid white; padding-bottom: 0.5rem;">
+        <i class="fas fa-chart-line"></i> Dashboard
+      </a>
+      <div style="flex: 1;"></div>
+      <span style="color: rgba(255, 255, 255, 0.9); font-size: 0.9rem;">v1.0 Professional Edition</span>
+    </nav>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <i class="fas fa-bus"></i>
+          <span>BusTrack Pro</span>
+        </div>
+        <button class="sidebar-toggle" id="sidebarToggle">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-section="overview">
+          <i class="fas fa-chart-line"></i>
+          <span>Overview</span>
+        </a>
+        <a href="#" class="nav-item" data-section="tracking">
+          <i class="fas fa-map"></i>
+          <span>Live Tracking</span>
+        </a>
+        <a href="#" class="nav-item" data-section="routes">
+          <i class="fas fa-route"></i>
+          <span>Routes</span>
+        </a>
+        <a href="#" class="nav-item" data-section="buses">
+          <i class="fas fa-bus"></i>
+          <span>Buses</span>
+        </a>
+        <a href="#" class="nav-item" data-section="drivers">
+          <i class="fas fa-users"></i>
+          <span>Drivers</span>
+        </a>
+        <a href="#" class="nav-item" data-section="analytics">
+          <i class="fas fa-chart-bar"></i>
+          <span>Analytics</span>
+        </a>
+        <a href="#" class="nav-item" data-section="settings">
+          <i class="fas fa-cog"></i>
+          <span>Settings</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" id="logoutBtn">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <div class="dashboard-inner">
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Header -->
+      <header class="top-header">
+        <div class="header-left">
+          <h1 id="pageTitle">📊 Dashboard Overview</h1>
+        </div>
+        <div class="header-right">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="globalSearch" placeholder="Search buses, routes...">
+          </div>
+          <div class="header-actions">
+            <button class="icon-btn" id="refreshBtn" title="Refresh">
+              <i class="fas fa-sync"></i>
+            </button>
+            <button class="icon-btn" id="notificationBtn" title="Notifications">
+              <i class="fas fa-bell"></i>
+              <span class="badge">3</span>
+            </button>
+            <div class="user-menu">
+              <img src="https://ui-avatars.com/api/?name=Admin&background=667eea&color=fff" alt="User">
+              <span>Admin</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Sections Content -->
+      <div class="content-area">
+        
+        <!-- Overview Section -->
+        <section id="overview" class="section active">
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-icon bus-icon">
+                <i class="fas fa-bus"></i>
+              </div>
+              <div class="stat-content">
+                <h3>Total Buses</h3>
+                <p class="stat-value" id="totalBuses">6</p>
+                <small>4 active</small>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon driver-icon">
+                <i class="fas fa-user-tie"></i>
+              </div>
+              <div class="stat-content">
+                <h3>Active Drivers</h3>
+                <p class="stat-value" id="activeDrivers">3</p>
+                <small>On duty</small>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon route-icon">
+                <i class="fas fa-route"></i>
+              </div>
+              <div class="stat-content">
+                <h3>Active Routes</h3>
+                <p class="stat-value" id="activeRoutes">4</p>
+                <small>Operating</small>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon alert-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+              </div>
+              <div class="stat-content">
+                <h3>Alerts</h3>
+                <p class="stat-value" id="totalAlerts">2</p>
+                <small>Last 24h</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="charts-row">
+            <div class="chart-card">
+              <h3>🚌 Fleet Status</h3>
+              <canvas id="fleetChart" height="80"></canvas>
+            </div>
+            <div class="chart-card">
+              <h3>📈 Route Performance</h3>
+              <canvas id="routeChart" height="80"></canvas>
+            </div>
+          </div>
+
+          <div class="activity-section">
+            <div class="activity-card">
+              <h3><i class="fas fa-history"></i> Recent Activity</h3>
+              <div id="activityList" class="activity-list">
+                <div class="activity-item">
+                  <span class="activity-badge active">✓ Active</span>
+                  <span class="activity-text">Bus BUS-1001 started route</span>
+                  <span class="activity-time">5 mins ago</span>
+                </div>
+                <div class="activity-item">
+                  <span class="activity-badge alert">⚠ Alert</span>
+                  <span class="activity-text">Bus BUS-1005 maintenance completed</span>
+                  <span class="activity-time">15 mins ago</span>
+                </div>
+                <div class="activity-item">
+                  <span class="activity-badge active">✓ Active</span>
+                  <span class="activity-text">New driver John Silva added</span>
+                  <span class="activity-time">30 mins ago</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Live Tracking Section -->
+        <section id="tracking" class="section">
+          <div class="table-header">
+            <h2>🗺️ Live Bus Tracking</h2>
+            <button class="btn-primary" id="centerMapBtn">
+              <i class="fas fa-location-arrow"></i> Center Map
+            </button>
+          </div>
+          <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); height: 500px; margin-bottom: 1.5rem;">
+            <div id="mapContainer" style="width: 100%; height: 100%;"></div>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Bus Plate</th>
+                  <th>Status</th>
+                  <th>Speed</th>
+                  <th>Route</th>
+                  <th>Driver</th>
+                  <th>Location</th>
+                </tr>
+              </thead>
+              <tbody id="trackingTableBody">
+                <tr>
+                  <td>BUS-1001</td>
+                  <td><span style="background: #d4edda; color: #155724; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem;">🟢 Running</span></td>
+                  <td>45 km/h</td>
+                  <td>Route 1</td>
+                  <td>John Silva</td>
+                  <td>Downtown</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Routes Section -->
+        <section id="routes" class="section">
+          <div class="table-header">
+            <h2>🛣️ Routes Management</h2>
+            <button class="btn-primary" id="addRouteBtn">
+              <i class="fas fa-plus"></i> Add Route
+            </button>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Route Name</th>
+                  <th>Start Point</th>
+                  <th>End Point</th>
+                  <th>Stops</th>
+                  <th>Buses Assigned</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="routesTableBody">
+                <tr>
+                  <td>Route 1</td>
+                  <td>Fort</td>
+                  <td>Dehiwala</td>
+                  <td>8</td>
+                  <td>2</td>
+                  <td><span style="background: #d4edda; color: #155724; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem;">✓ Active</span></td>
+                </tr>
+                <tr>
+                  <td>Route 2</td>
+                  <td>Colombo</td>
+                  <td>Kandy</td>
+                  <td>12</td>
+                  <td>1</td>
+                  <td><span style="background: #d4edda; color: #155724; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem;">✓ Active</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Buses Section -->
+        <section id="buses" class="section">
+          <div class="table-header">
+            <h2>🚌 Fleet Management</h2>
+            <button class="btn-primary" id="addBusBtn">
+              <i class="fas fa-plus"></i> Add Bus
+            </button>
+          </div>
+          <div class="buses-grid" id="busesGrid">
+            <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);">
+              <h4 style="color: #667eea; margin-bottom: 1rem;">🚌 BUS-1001</h4>
+              <div style="display: flex; flex-direction: column; gap: 0.8rem; font-size: 0.95rem;">
+                <div><strong>Capacity:</strong> 50</div>
+                <div><strong>Status:</strong> <span style="color: #2ecc71;">🟢 Running</span></div>
+                <div><strong>Driver:</strong> John Silva</div>
+                <div><strong>Route:</strong> Route 1</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Drivers Section -->
+        <section id="drivers" class="section">
+          <div class="table-header">
+            <h2>👥 Drivers Management</h2>
+            <button class="btn-primary" id="addDriverBtn">
+              <i class="fas fa-plus"></i> Add Driver
+            </button>
+          </div>
+          <div class="drivers-grid" id="driversGrid">
+            <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);">
+              <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <img src="https://ui-avatars.com/api/?name=John+Silva&background=667eea&color=fff" style="width: 50px; height: 50px; border-radius: 50%;">
+                <h4 style="color: #667eea;">John Silva</h4>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 0.8rem; font-size: 0.95rem;">
+                <div><strong>License:</strong> DL-2024-001</div>
+                <div><strong>Phone:</strong> +94701234567</div>
+                <div><strong>Status:</strong> <span style="color: #2ecc71;">✓ Active</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Analytics Section -->
+        <section id="analytics" class="section">
+          <div class="table-header">
+            <h2>📊 Analytics & Reports</h2>
+          </div>
+          <div class="charts-row">
+            <div class="chart-card">
+              <h3>Daily Trips</h3>
+              <canvas id="dailyTripsChart" height="80"></canvas>
+            </div>
+            <div class="chart-card">
+              <h3>Average Occupancy</h3>
+              <canvas id="occupancyChart" height="80"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings" class="section">
+          <div class="table-header">
+            <h2>⚙️ System Settings</h2>
+          </div>
+          <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);">
+            <div style="margin-bottom: 2rem;">
+              <h3 style="color: #667eea; margin-bottom: 1rem;">🔔 Notifications</h3>
+              <label style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <input type="checkbox" checked>
+                <span>Email notifications</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <input type="checkbox" checked>
+                <span>SMS alerts</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 1rem;">
+                <input type="checkbox">
+                <span>Push notifications</span>
+              </label>
+            </div>
+            <div style="border-top: 1px solid #e0e0e0; padding-top: 2rem;">
+              <h3 style="color: #667eea; margin-bottom: 1rem;">🔐 Security</h3>
+              <button class="btn-primary">Change Password</button>
+              <button class="btn-primary" style="margin-left: 1rem; background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);">Enable 2FA</button>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <script>
+    // Dashboard Initialization
+    document.addEventListener('DOMContentLoaded', () => {
+      // Sidebar Navigation
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          
+          // Remove active from all items
+          document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+          item.classList.add('active');
+          
+          // Hide all sections
+          document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+          
+          // Show selected section
+          const section = item.dataset.section;
+          const titles = {
+            overview: '📊 Dashboard Overview',
+            tracking: '🗺️ Live Bus Tracking',
+            routes: '🛣️ Routes Management',
+            buses: '🚌 Fleet Management',
+            drivers: '👥 Drivers Management',
+            analytics: '📊 Analytics & Reports',
+            settings: '⚙️ System Settings'
+          };
+          
+          document.getElementById(section).classList.add('active');
+          document.getElementById('pageTitle').textContent = titles[section];
+          
+          // Close sidebar on mobile
+          if (window.innerWidth < 768) {
+            document.querySelector('.sidebar').classList.remove('open');
+          }
+        });
+      });
+
+      // Sidebar Toggle
+      const sidebarToggle = document.getElementById('sidebarToggle');
+      if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', () => {
+          document.querySelector('.sidebar').classList.toggle('open');
+        });
+      }
+
+      // Logout
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        if (confirm('Are you sure you want to logout?')) {
+          alert('Logged out successfully!');
+          window.location.href = 'index.html';
+        }
+      });
+
+      // Refresh Button
+      document.getElementById('refreshBtn').addEventListener('click', () => {
+        location.reload();
+      });
+
+      // Initialize Charts
+      initializeCharts();
+    });
+
+    function initializeCharts() {
+      const ctx1 = document.getElementById('fleetChart').getContext('2d');
+      new Chart(ctx1, {
+        type: 'doughnut',
+        data: {
+          labels: ['Running', 'Idle', 'Maintenance'],
+          datasets: [{
+            data: [4, 1, 1],
+            backgroundColor: ['#2ecc71', '#f39c12', '#e74c3c'],
+            borderColor: ['#27ae60', '#e67e22', '#c0392b'],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+
+      const ctx2 = document.getElementById('routeChart').getContext('2d');
+      new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: ['Route 1', 'Route 2', 'Route 3', 'Route 4'],
+          datasets: [{
+            label: 'On-Time %',
+            data: [95, 88, 92, 85],
+            backgroundColor: '#667eea',
+            borderColor: '#764ba2',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          scales: {
+            y: { beginAtZero: true, max: 100 }
+          }
+        }
+      });
+
+      if (document.getElementById('dailyTripsChart')) {
+        const ctx3 = document.getElementById('dailyTripsChart').getContext('2d');
+        new Chart(ctx3, {
+          type: 'line',
+          data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+              label: 'Trips',
+              data: [65, 78, 82, 75, 88, 92, 70],
+              borderColor: '#667eea',
+              backgroundColor: 'rgba(102, 126, 234, 0.1)',
+              borderWidth: 2,
+              tension: 0.4,
+              fill: true
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: true }
+        });
+      }
+
+      if (document.getElementById('occupancyChart')) {
+        const ctx4 = document.getElementById('occupancyChart').getContext('2d');
+        new Chart(ctx4, {
+          type: 'radar',
+          data: {
+            labels: ['Peak Hours', 'Morning', 'Afternoon', 'Evening', 'Night'],
+            datasets: [{
+              label: 'Occupancy %',
+              data: [85, 60, 55, 75, 30],
+              borderColor: '#764ba2',
+              backgroundColor: 'rgba(118, 75, 162, 0.2)',
+              borderWidth: 2
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: true }
+        });
+      }
+    }
+  </script>
+</body>
+</html>

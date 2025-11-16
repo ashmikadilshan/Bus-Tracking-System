@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Driver Dashboard - Real-time Bus Management</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .driver-hero {
+      background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+      color: white;
+      padding: 2rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    }
+
+    .driver-hero h2 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      color: white;
+      border: none;
+    }
+
+    .driver-hero p {
+      opacity: 0.95;
+      margin-bottom: 1.5rem;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .status-item {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 1rem;
+      border-radius: 10px;
+      backdrop-filter: blur(10px);
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .status-item .label {
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+
+    .status-item .value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #ffd700;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .card h3 {
+      color: #2ecc71;
+      margin-bottom: 1.5rem;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.6rem;
+      font-weight: 600;
+      color: #333;
+      font-size: 0.95rem;
+    }
+
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+      transition: all 0.3s ease;
+    }
+
+    .form-group input:focus, .form-group select:focus {
+      outline: none;
+      border-color: #2ecc71;
+      box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .form-row .form-group {
+      margin-bottom: 0;
+    }
+
+    .action-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+      color: white;
+      padding: 1rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+    }
+
+    .btn-alert {
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      color: white;
+      padding: 1rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-alert:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+    }
+
+    #status, #locationStatus {
+      margin-top: 1.5rem;
+      padding: 1.5rem;
+      border-radius: 10px;
+      display: none;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .status-success {
+      background: #d4edda;
+      color: #155724;
+      border-left: 5px solid #28a745;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .status-success i {
+      font-size: 1.5rem;
+    }
+
+    .status-error {
+      background: #f8d7da;
+      color: #721c24;
+      border-left: 5px solid #f5576c;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .status-error i {
+      font-size: 1.5rem;
+    }
+
+    .status-info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border-left: 5px solid #17a2b8;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .status-info i {
+      font-size: 1.5rem;
+    }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #f0f0f0;
+    }
+
+    .quick-action-btn {
+      padding: 1rem;
+      border-radius: 8px;
+      border: 2px solid #e0e0e0;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .quick-action-btn:hover {
+      border-color: #2ecc71;
+      background: #f0f8f5;
+      color: #2ecc71;
+    }
+
+    .info-box {
+      background: #f8f9fa;
+      border-left: 4px solid #2ecc71;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      font-size: 0.95rem;
+      color: #555;
+    }
+
+    .info-box strong {
+      color: #2ecc71;
+    }
+
+    @media (max-width: 768px) {
+      .driver-hero {
+        padding: 1.5rem 1rem;
+      }
+
+      .driver-hero h2 {
+        font-size: 1.5rem;
+      }
+
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .action-buttons {
+        grid-template-columns: 1fr;
+      }
+
+      .status-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .card {
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🚗 Driver Dashboard</h1>
+    <nav>
+      <a href="index.html">Passenger</a>
+      <a href="driver.html" class="active">Driver</a>
+      <a href="admin.html">Admin</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="login.html" style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 0.8rem 1.5rem; border-radius: 8px; color: white !important;">Login</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="driver-hero">
+      <h2>👋 Welcome, Driver!</h2>
+      <p>Manage your route, update location, and communicate with dispatch in real-time</p>
+      <div class="status-grid">
+        <div class="status-item">
+          <div class="label">Trip Status</div>
+          <div class="value" id="tripStatus">-</div>
+        </div>
+        <div class="status-item">
+          <div class="label">Current Speed</div>
+          <div class="value" id="speedStatus">-</div>
+        </div>
+        <div class="status-item">
+          <div class="label">Passengers</div>
+          <div class="value" id="passengerCount">-</div>
+        </div>
+        <div class="status-item">
+          <div class="label">Distance</div>
+          <div class="value" id="distanceStatus">-</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Dashboard -->
+    <div class="dashboard-grid">
+      <!-- Location Tracking Card -->
+      <div class="card">
+        <h3><i class="fas fa-location-dot"></i> Update Location</h3>
+        
+        <div class="form-group">
+          <label for="bus_id">Bus ID</label>
+          <input id="bus_id" type="number" placeholder="e.g., 1" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="lat">Latitude</label>
+            <input id="lat" type="number" step="0.00001" placeholder="6.9271" />
+          </div>
+          <div class="form-group">
+            <label for="lng">Longitude</label>
+            <input id="lng" type="number" step="0.00001" placeholder="79.8612" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="speed">Speed (km/h)</label>
+          <input id="speed" type="number" step="0.1" placeholder="0" />
+        </div>
+
+        <button class="btn-primary" id="send">
+          <i class="fas fa-paper-plane"></i> Send Location
+        </button>
+
+        <div id="locationStatus"></div>
+
+        <div class="info-box">
+          <strong>📍 Pro Tip:</strong> Your location updates are sent to the dispatch center in real-time. Keep your GPS enabled for accurate tracking.
+        </div>
+      </div>
+
+      <!-- Actions & Alerts Card -->
+      <div class="card">
+        <h3><i class="fas fa-bell"></i> Report & Communicate</h3>
+
+        <div class="form-group">
+          <label for="alertType">Alert Type</label>
+          <select id="alertType">
+            <option value="">Select an issue...</option>
+            <option value="delay">📍 Route Delay</option>
+            <option value="accident">⚠️ Accident/Incident</option>
+            <option value="mechanical">🔧 Mechanical Issue</option>
+            <option value="traffic">🚗 Heavy Traffic</option>
+            <option value="passenger">👤 Passenger Issue</option>
+            <option value="other">❓ Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="message">Additional Details</label>
+          <textarea id="message" placeholder="Describe the issue..." style="width: 100%; padding: 0.9rem; border: 2px solid #e0e0e0; border-radius: 8px; font-family: inherit; resize: vertical; height: 100px;"></textarea>
+        </div>
+
+        <button class="btn-alert" id="alert">
+          <i class="fas fa-exclamation-circle"></i> Send Alert
+        </button>
+
+        <div id="status"></div>
+
+        <div class="info-box">
+          <strong>⚠️ Important:</strong> Only report genuine issues. False alerts may result in penalties.
+        </div>
+      </div>
+
+      <!-- Trip Status Card -->
+      <div class="card">
+        <h3><i class="fas fa-tasks"></i> Trip Information</h3>
+
+        <div class="form-group">
+          <label for="route">Current Route</label>
+          <input id="route" type="text" placeholder="e.g., Route 5 (Fort - Dehiwala)" disabled />
+        </div>
+
+        <div class="form-group">
+          <label for="nextStop">Next Stop</label>
+          <input id="nextStop" type="text" placeholder="Loading..." disabled />
+        </div>
+
+        <div class="form-group">
+          <label for="passengers">Passengers Onboard</label>
+          <input id="passengers" type="number" placeholder="0" disabled />
+        </div>
+
+        <div class="form-group">
+          <label for="tripStatus">Trip Status</label>
+          <select id="tripStatusSelect">
+            <option value="">Select status...</option>
+            <option value="on-time">✅ On Time</option>
+            <option value="delayed">⏱️ Delayed</option>
+            <option value="completed">✓ Completed</option>
+          </select>
+        </div>
+
+        <button class="btn-primary" id="updateTrip" style="margin-top: 1rem;">
+          <i class="fas fa-check"></i> Update Trip Status
+        </button>
+
+        <div class="info-box" style="margin-top: 1rem;">
+          <strong>📋 Remember:</strong> Update your trip status at each major stop to keep dispatch informed.
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <section style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); margin-bottom: 2rem;">
+      <h3 style="color: #2ecc71; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="fas fa-keyboard"></i> Quick Actions
+      </h3>
+      <div class="quick-actions">
+        <button class="quick-action-btn" onclick="startTrip()">
+          <i class="fas fa-play"></i><br>Start Trip
+        </button>
+        <button class="quick-action-btn" onclick="endTrip()">
+          <i class="fas fa-stop"></i><br>End Trip
+        </button>
+        <button class="quick-action-btn" onclick="reportBreak()">
+          <i class="fas fa-coffee"></i><br>Report Break
+        </button>
+        <button class="quick-action-btn" onclick="requestHelp()">
+          <i class="fas fa-life-ring"></i><br>Request Help
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <footer>🚗 Developed by Team 3DNA | Driver Portal © 2025</footer>
+
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script>
+    const socket = io('/', { transports: ['websocket'] })
+
+    // Show status message with animation
+    function showStatus(message, type = 'success') {
+      const statusDiv = type === 'alert' ? document.getElementById('status') : document.getElementById('locationStatus')
+      statusDiv.className = `status-${type}`
+      const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'
+      statusDiv.innerHTML = `<i class="fas ${icon}"></i><span>${message}</span>`
+      statusDiv.style.display = 'flex'
+      
+      setTimeout(() => {
+        statusDiv.style.display = 'none'
+      }, 5000)
+    }
+
+    // Send Location
+    document.getElementById('send').addEventListener('click', () => {
+      const bus_id = parseInt(document.getElementById('bus_id').value)
+      const lat = parseFloat(document.getElementById('lat').value)
+      const lng = parseFloat(document.getElementById('lng').value)
+      const speed = parseFloat(document.getElementById('speed').value)
+
+      if (!bus_id || !lat || !lng || isNaN(speed)) {
+        showStatus('Please fill in all fields', 'error')
+        return
+      }
+
+      if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        showStatus('Invalid coordinates! Latitude: -90 to 90, Longitude: -180 to 180', 'error')
+        return
+      }
+
+      if (speed < 0 || speed > 150) {
+        showStatus('Speed must be between 0-150 km/h', 'error')
+        return
+      }
+
+      socket.emit('location_update', { bus_id, lat, lng, speed })
+      showStatus('✅ Location sent successfully! Updated to dispatch center.', 'success')
+      
+      document.getElementById('speedStatus').textContent = speed.toFixed(1) + ' km/h'
+    })
+
+    // Send Alert
+    document.getElementById('alert').addEventListener('click', () => {
+      const bus_id = parseInt(document.getElementById('bus_id').value)
+      const alertType = document.getElementById('alertType').value
+      const message = document.getElementById('message').value
+
+      if (!bus_id) {
+        showStatus('Please enter Bus ID first', 'error')
+        return
+      }
+
+      if (!alertType) {
+        showStatus('Please select an alert type', 'error')
+        return
+      }
+
+      socket.emit('alert', { 
+        bus_id, 
+        type: alertType, 
+        message: message || alertType,
+        timestamp: new Date().toISOString()
+      })
+
+      showStatus(`⚠️ Alert sent to dispatch center! Type: ${alertType}`, 'info')
+      document.getElementById('alertType').value = ''
+      document.getElementById('message').value = ''
+    })
+
+    // Update Trip Status
+    document.getElementById('updateTrip').addEventListener('click', () => {
+      const tripStatus = document.getElementById('tripStatusSelect').value
+      
+      if (!tripStatus) {
+        showStatus('Please select a trip status', 'error')
+        return
+      }
+
+      socket.emit('trip_update', { 
+        status: tripStatus,
+        timestamp: new Date().toISOString()
+      })
+
+      showStatus(`✅ Trip status updated to: ${tripStatus}`, 'success')
+    })
+
+    // Quick Actions
+    function startTrip() {
+      showStatus('🚗 Trip started! Safe travels!', 'info')
+      document.getElementById('tripStatus').textContent = '🚗 Active'
+    }
+
+    function endTrip() {
+      showStatus('✅ Trip ended. Thank you for driving!', 'success')
+      document.getElementById('tripStatus').textContent = '✓ Complete'
+    }
+
+    function reportBreak() {
+      showStatus('☕ Break reported to dispatch', 'info')
+    }
+
+    function requestHelp() {
+      showStatus('🆘 Help request sent! A supervisor will contact you.', 'info')
+    }
+
+    // Socket connection feedback
+    socket.on('connect', () => {
+      console.log('✅ Connected to dispatch center')
+      document.getElementById('tripStatus').textContent = 'Ready'
+    })
+
+    socket.on('disconnect', () => {
+      console.log('❌ Disconnected from dispatch')
+      document.getElementById('tripStatus').textContent = 'Offline'
+    })
+
+    socket.on('location_acknowledged', (data) => {
+      console.log('📍 Location received by dispatch:', data)
+    })
+
+    socket.on('alert_acknowledged', (data) => {
+      console.log('⚠️ Alert received by dispatch:', data)
+    })
+
+    // Initialize
+    document.getElementById('tripStatus').textContent = 'Ready'
+  </script>
+</body>
+</html>

@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Online Bus Tracking - Real-time Fleet Management</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .hero-section {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f5576c 100%);
+      color: white;
+      padding: 3rem 2rem;
+      text-align: center;
+      margin-bottom: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+    
+    .hero-section h2 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      font-weight: 700;
+      color: white;
+      border: none;
+      padding: 0;
+    }
+    
+    .hero-section p {
+      font-size: 1.1rem;
+      opacity: 0.95;
+      max-width: 600px;
+      margin: 0 auto 2rem;
+    }
+    
+    .quick-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+    
+    .stat-card {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 1.5rem;
+      border-radius: 10px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .stat-card .number {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #ffd700;
+    }
+    
+    .stat-card .label {
+      font-size: 0.9rem;
+      opacity: 0.9;
+      margin-top: 0.5rem;
+    }
+    
+    #search {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+    }
+    
+    .search-container {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .search-container input {
+      flex: 1;
+      min-width: 250px;
+      margin: 0;
+      padding: 1rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    
+    .search-container input:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .search-container button {
+      margin: 0;
+      white-space: nowrap;
+      padding: 1rem 2rem;
+    }
+    
+    .filters {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .filter-btn {
+      padding: 0.6rem 1.2rem;
+      border: 2px solid #e0e0e0;
+      background: white;
+      color: #333;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.9rem;
+    }
+    
+    .filter-btn:hover, .filter-btn.active {
+      border-color: #667eea;
+      background: #667eea;
+      color: white;
+    }
+    
+    #map-section {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+    }
+    
+    #map {
+      width: 100%;
+      height: 500px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    #list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 0;
+    }
+    
+    .bus-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      border-left: 5px solid #667eea;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .bus-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      opacity: 0.05;
+      border-radius: 50%;
+      transform: translate(30px, -30px);
+    }
+    
+    .bus-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    }
+    
+    .bus-card h3 {
+      color: #667eea;
+      margin-bottom: 1rem;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .bus-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+    
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 0.95rem;
+    }
+    
+    .info-row strong {
+      color: #333;
+    }
+    
+    .info-row span {
+      color: #666;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 0.5rem;
+    }
+    
+    .status-active {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .status-inactive {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    
+    .status-maintenance {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    .bus-actions {
+      display: flex;
+      gap: 0.8rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .bus-actions button {
+      flex: 1;
+      min-width: 120px;
+      padding: 0.6rem 1rem;
+      margin: 0;
+      font-size: 0.9rem;
+    }
+    
+    .btn-map {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .btn-details {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: #999;
+    }
+    
+    .empty-state i {
+      font-size: 3rem;
+      color: #ddd;
+      margin-bottom: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+      .hero-section {
+        padding: 2rem 1rem;
+        margin-bottom: 1.5rem;
+      }
+      
+      .hero-section h2 {
+        font-size: 1.8rem;
+      }
+      
+      .quick-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.8rem;
+      }
+      
+      #search {
+        padding: 1.5rem;
+      }
+      
+      .search-container {
+        flex-direction: column;
+      }
+      
+      .search-container input {
+        min-width: 100%;
+      }
+      
+      .search-container button {
+        width: 100%;
+      }
+      
+      #map {
+        height: 350px;
+      }
+      
+      #list {
+        grid-template-columns: 1fr;
+      }
+      
+      .bus-card {
+        border-left-width: 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🚌 Online Bus Tracking System</h1>
+    <nav>
+      <a href="index.html" class="active">Passenger</a>
+      <a href="driver.html">Driver</a>
+      <a href="admin.html">Admin</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="login.html" style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 0.8rem 1.5rem; border-radius: 8px; color: white !important;">Login</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <h2>🚀 Track Buses in Real-Time</h2>
+      <p>Get live updates on bus locations, arrival times, and route information. Never miss your bus again!</p>
+      <div class="quick-stats">
+        <div class="stat-card">
+          <div class="number" id="busCount">0</div>
+          <div class="label">Active Buses</div>
+        </div>
+        <div class="stat-card">
+          <div class="number" id="routeCount">0</div>
+          <div class="label">Routes</div>
+        </div>
+        <div class="stat-card">
+          <div class="number" id="driverCount">0</div>
+          <div class="label">Drivers</div>
+        </div>
+        <div class="stat-card">
+          <div class="number">24/7</div>
+          <div class="label">Service</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Search Section -->
+    <section id="search">
+      <div class="search-container">
+        <input id="q" placeholder="🔍 Search by bus plate, route number, or destination..." />
+        <button id="searchBtn" class="btn-primary">🔍 Search Now</button>
+      </div>
+      <div class="filters">
+        <button class="filter-btn active" data-filter="all">All Buses</button>
+        <button class="filter-btn" data-filter="active">🟢 Running</button>
+        <button class="filter-btn" data-filter="idle">🟡 Idle</button>
+        <button class="filter-btn" data-filter="maintenance">🔧 Maintenance</button>
+      </div>
+    </section>
+
+    <!-- Map Section -->
+    <section id="map-section">
+      <h2 style="color: #667eea; margin-bottom: 1rem;">Live Bus Map</h2>
+      <div id="map"></div>
+    </section>
+
+    <!-- Results List -->
+    <section id="list"></section>
+  </main>
+
+  <footer>🚌 Developed by Team 3DNA | Real-time Bus Tracking © 2025</footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/socket.js"></script>
+  <script>
+    const api = '/api'
+    const mapApp = createMap('map')
+    let currentFilter = 'all'
+    let allBuses = []
+
+    // Load initial stats
+    async function loadStats() {
+      try {
+        const res = await fetch(`${api}/passenger/buses`)
+        const buses = await res.json()
+        document.getElementById('busCount').textContent = buses.length
+        
+        // Calculate unique routes
+        const routes = [...new Set(buses.map(b => b.route_id))].length
+        document.getElementById('routeCount').textContent = routes
+        
+        document.getElementById('driverCount').textContent = buses.filter(b => b.driver_id).length
+      } catch (e) {
+        console.error('Failed to load stats:', e)
+      }
+    }
+
+    // Search functionality
+    document.getElementById('searchBtn').addEventListener('click', performSearch)
+    document.getElementById('q').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') performSearch()
+    })
+
+    async function performSearch() {
+      const q = document.getElementById('q').value.trim()
+      if (!q) {
+        alert('Please enter a search query')
+        return
+      }
+
+      try {
+        const res = await fetch(`${api}/passenger/buses?q=${encodeURIComponent(q)}`)
+        allBuses = await res.json()
+        displayBuses(allBuses)
+      } catch (e) {
+        console.error('Search failed:', e)
+        alert('Search failed. Please try again.')
+      }
+    }
+
+    // Filter functionality
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'))
+        e.target.classList.add('active')
+        currentFilter = e.target.dataset.filter
+        displayBuses(allBuses)
+      })
+    })
+
+    function displayBuses(buses) {
+      if (!buses || buses.length === 0) {
+        document.getElementById('list').innerHTML = `
+          <div class="empty-state" style="grid-column: 1/-1;">
+            <i class="fas fa-search"></i>
+            <p>No buses found. Try searching with a different query.</p>
+          </div>
+        `
+        return
+      }
+
+      const filtered = currentFilter === 'all' ? buses : buses.filter(b => {
+        const status = b.status || 'running'
+        return status.toLowerCase().includes(currentFilter.toLowerCase())
+      })
+
+      document.getElementById('list').innerHTML = filtered.map(b => `
+        <div class="bus-card">
+          <h3><i class="fas fa-bus"></i> Bus ${b.plate_number}</h3>
+          <div class="bus-info">
+            <div class="info-row">
+              <strong>Route:</strong>
+              <span>${b.route_id || 'N/A'}</span>
+            </div>
+            <div class="info-row">
+              <strong>Status:</strong>
+              <span class="status-badge ${getStatusClass(b.status || 'active')}">
+                ${getStatusText(b.status || 'active')}
+              </span>
+            </div>
+            <div class="info-row">
+              <strong>Location:</strong>
+              <span>${b.current_location || 'Updating...'}</span>
+            </div>
+            <div class="info-row">
+              <strong>Capacity:</strong>
+              <span>${b.passenger_count || 0}/${b.capacity || 50}</span>
+            </div>
+            ${b.eta ? `<div class="info-row"><strong>ETA:</strong><span>${b.eta}</span></div>` : ''}
+          </div>
+          <div class="bus-actions">
+            <button class="btn-map" onclick="focusBus(${b.id})"><i class="fas fa-map-pin"></i> Show Map</button>
+            <button class="btn-details" onclick="showDetails(${b.id})"><i class="fas fa-info-circle"></i> Details</button>
+          </div>
+        </div>
+      `).join('')
+    }
+
+    function getStatusClass(status) {
+      const s = (status || '').toLowerCase()
+      if (s.includes('active') || s.includes('running')) return 'status-active'
+      if (s.includes('maintenance')) return 'status-maintenance'
+      return 'status-inactive'
+    }
+
+    function getStatusText(status) {
+      const s = (status || '').toLowerCase()
+      if (s.includes('active') || s.includes('running')) return '🟢 Running'
+      if (s.includes('maintenance')) return '🔧 Maintenance'
+      return '🟡 Idle'
+    }
+
+    function focusBus(id) {
+      if (mapApp && mapApp.focusBus) {
+        mapApp.focusBus(id)
+      }
+    }
+
+    function showDetails(id) {
+      const bus = allBuses.find(b => b.id === id)
+      if (bus) {
+        alert(`Bus: ${bus.plate_number}\nRoute: ${bus.route_id}\nStatus: ${bus.status || 'Active'}`)
+      }
+    }
+
+    // Socket connection for real-time updates
+    const socket = io('/', { transports: ['websocket'] })
+    socket.on('connect', () => console.log('✅ Connected to live updates'))
+    socket.on('bus_location', data => {
+      if (mapApp && mapApp.updateBus) {
+        mapApp.updateBus(data.bus_id, data.lat, data.lng)
+      }
+    })
+    socket.on('alert', data => {
+      console.log('⚠️ Alert:', data.message)
+    })
+
+    // Load initial data
+    loadStats()
+  </script>
+</body>
+</html>
